@@ -8,7 +8,7 @@ from .serializers import LoginSerializer ,ProductSerializer,ProductPostSerialize
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from ecommerce_api.models import Product,CartItem,ProductImg
 from rest_framework import generics,filters
 
@@ -55,6 +55,7 @@ class LoginAPIView(APIView):
 
 class CreateProduct(APIView):
     permission_classes = [ IsAuthenticated ]
+    permission_classes = [IsAdminUser]
 
     def post(self, request, format=None):
         serializer = ProductPostSerializer(data=request.data)
@@ -70,16 +71,7 @@ class AllProducts(APIView):
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
-
-class DetailsProduct(APIView):
-    permission_classes = [ IsAuthenticated ]
-
-    def get(self, request, pk, format=None):
-
-        product = Product.objects.get(id=pk)
-        serializer = ProductSerializer(product)
-        return Response(serializer.data)
-        
+   
 class DetailsProduct(APIView):
     permission_classes = [ IsAuthenticated ]
 
@@ -94,6 +86,7 @@ class DetailsProduct(APIView):
         
 class UpdateProduct(APIView):
     permission_classes = [ IsAuthenticated ]
+    permission_classes = [IsAdminUser]
 
     def put(self, request, pk, format=None):
         try:
@@ -108,6 +101,7 @@ class UpdateProduct(APIView):
         
 class DeleteProduct(APIView):
     permission_classes = [ IsAuthenticated ]
+    permission_classes = [IsAdminUser]
 
     def delete(self, request, pk, format=None):
         try:
@@ -115,12 +109,12 @@ class DeleteProduct(APIView):
         except Product.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-      
         product.delete() 
         return Response({'message': 'product was deleted successfully!'},status=status.HTTP_200_OK)
 
 class AddImageProduct(APIView):
     permission_classes = [ IsAuthenticated ]
+    permission_classes = [IsAdminUser]
 
     def post(self, request, format=None):
         serializer = ProductImageSerializer(data=request.data)
@@ -133,13 +127,13 @@ class ImageProductById(APIView):
     permission_classes = [ IsAuthenticated ]
 
     def get(self, request,pk, format=None):
-     
+        
         try:
-            productImg = ProductImg.objects.get(productId=pk)
+            productImg = ProductImg.objects.filter(productId=pk)
         except ProductImg.DoesNotExist:
               return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = ProductImageSerializer(productImg)
+        serializer = ProductImageSerializer(productImg,many=True)
         return Response(serializer.data)
 
 class CreateCart(APIView):
